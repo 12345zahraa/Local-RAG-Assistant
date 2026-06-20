@@ -12,7 +12,7 @@ from pypdf import PdfReader
 # ترفند طلایی: اضافه کردن خودکار مسیر پروژه به پایتون
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
-from app.core_rag import get_rag_chain, process_and_index_text
+from app.core_rag import get_rag_chain, process_and_index_text, get_reranker
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,6 +22,18 @@ app = FastAPI(
     description="A production-style local retrieval and generation API powered by FastAPI, Ollama, and Qdrant.",
     version="1.0.0",
 )
+
+
+@app.on_event("startup")
+def startup_event():
+    """Initialize the reranker model on application startup to avoid lazy loading delays."""
+    logger.info("Initializing reranker model at startup...")
+    try:
+        get_reranker()
+        logger.info("✓ Reranker model initialized successfully")
+    except Exception as exc:
+        logger.error(f"✗ Failed to initialize reranker model: {exc}")
+        raise
 
 
 class IndexResponse(BaseModel):
@@ -82,16 +94,25 @@ async def index_document(file: UploadFile = File(...)):
     response_model=AskResponse,
     summary="Ask a question using the local RAG pipeline",
 )
-def ask(question: str = Query(..., min_length=1, description="Question to ask the model.")):
+def ask(
+    question: str = Query(..., min_length=1, description="Question to ask the model."),
+    session_id: str = Query(
+        default="default",
+        description="Session identifier used to isolate conversation history.",
+    ),
+):
     try:
         rag_chain = get_rag_chain()
-        answer = rag_chain.invoke(question)
+        answer = rag_chain.invoke(
+            {"question": question},
+            config={"configurable": {"session_id": session_id}},
+        )
         return AskResponse(answer=answer)
     except RuntimeError as exc:
-        logger.warning("Ask request failed: %s", exc)
+        logger.warning("Ask request failed for session %s: %s", session_id, exc)
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
-        logger.exception("Unexpected error while generating answer")
+        logger.exception("Unexpected error while generating answer for session %s", session_id)
         raise HTTPException(
             status_code=500,
             detail=f"Unexpected error while generating answer: {exc}",

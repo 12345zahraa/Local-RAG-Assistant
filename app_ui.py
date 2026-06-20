@@ -22,7 +22,7 @@ def check_server_health() -> bool:
         return False
 
 
-def index_document(uploaded_file) -> requests.Response | Exception:
+def index_document(uploaded_file):
     try:
         response = requests.post(
             f"{API_BASE_URL}/index-document",
@@ -40,11 +40,14 @@ def index_document(uploaded_file) -> requests.Response | Exception:
         return exc
 
 
-def ask_question(question: str):
+def ask_question(question: str, session_id: str):
     try:
         response = requests.get(
             f"{API_BASE_URL}/ask",
-            params={"question": question},
+            params={
+                "question": question,
+                "session_id": session_id,
+            },
             timeout=180,
         )
         return response
@@ -55,13 +58,23 @@ def ask_question(question: str):
 # -----------------------------
 # Session state
 # -----------------------------
-if "messages" not in st.session_state:
-    st.session_state.messages = [
+if "chat_sessions" not in st.session_state:
+    st.session_state.chat_sessions = {}
+
+if "session_id" not in st.session_state:
+    st.session_state.session_id = "default"
+
+if st.session_state.session_id not in st.session_state.chat_sessions:
+    st.session_state.chat_sessions[st.session_state.session_id] = [
         {
             "role": "assistant",
-            "content": "Hello! I’m your local document assistant. Ask me anything about the indexed content.",
+            "content": (
+                "Hello! I’m your local document assistant. Ask me anything about the indexed content."
+            ),
         }
     ]
+
+st.session_state.messages = st.session_state.chat_sessions[st.session_state.session_id]
 
 
 # -----------------------------
@@ -70,6 +83,12 @@ if "messages" not in st.session_state:
 with st.sidebar:
     st.header("📚 Document Manager")
     st.caption("Upload a PDF to add it to the local knowledge base.")
+
+    st.text_input(
+        "Session ID",
+        key="session_id",
+        help="Use a different session name to keep conversations isolated.",
+    )
 
     uploaded_file = st.file_uploader(
         "Upload PDF",
@@ -109,11 +128,27 @@ with st.sidebar:
         st.warning("Backend server is not responding. Check that the API is running.")
 
 
+# Update current session history if the session changes.
+if st.session_state.session_id not in st.session_state.chat_sessions:
+    st.session_state.chat_sessions[st.session_state.session_id] = [
+        {
+            "role": "assistant",
+            "content": (
+                "Hello! I’m your local document assistant. Ask me anything about the indexed content."
+            ),
+        }
+    ]
+
+st.session_state.messages = st.session_state.chat_sessions[st.session_state.session_id]
+
+
 # -----------------------------
 # Main content
 # -----------------------------
 st.title("🧠 Local RAG Chat")
-st.caption("Ask questions using your indexed documents.")
+st.caption(
+    f"Conversation session: {st.session_state.session_id}"
+)
 
 # Display chat history
 for message in st.session_state.messages:
@@ -123,18 +158,24 @@ for message in st.session_state.messages:
 # Chat input
 if prompt := st.chat_input("Ask a question about your documents..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.chat_sessions[st.session_state.session_id] = st.session_state.messages
+
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = ask_question(prompt)
+            response = ask_question(
+                prompt,
+                st.session_state.session_id,
+            )
 
         if isinstance(response, requests.Response) and response.status_code == 200:
             payload = response.json()
             answer = payload.get("answer", "")
             st.markdown(answer)
             st.session_state.messages.append({"role": "assistant", "content": answer})
+            st.session_state.chat_sessions[st.session_state.session_id] = st.session_state.messages
         elif isinstance(response, requests.Response):
             try:
                 error_detail = response.json().get("detail", response.text)
@@ -143,6 +184,7 @@ if prompt := st.chat_input("Ask a question about your documents..."):
             message = f"Sorry, I couldn't process that request. {error_detail}"
             st.error(message)
             st.session_state.messages.append({"role": "assistant", "content": message})
+            st.session_state.chat_sessions[st.session_state.session_id] = st.session_state.messages
         else:
             message = (
                 "The server is not responding right now. Please verify that the FastAPI API is running "
@@ -150,3 +192,4 @@ if prompt := st.chat_input("Ask a question about your documents..."):
             )
             st.error(message)
             st.session_state.messages.append({"role": "assistant", "content": message})
+            st.session_state.chat_sessions[st.session_state.session_id] = st.session_state.messages
