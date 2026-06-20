@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+streamlit
+sentence-transformers
+langchain
+langchain-community
+qdrant-client
+python-dotenv
