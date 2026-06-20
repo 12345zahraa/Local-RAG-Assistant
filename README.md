@@ -42,6 +42,8 @@ pip install -r requirements.txt
 
 Run the application:
 
+### Run the application:
+
+To start the interface, run the following command:
 ```bash
-python main.py
-```
+streamlit run app_ui.py
