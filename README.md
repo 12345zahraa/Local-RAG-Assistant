@@ -1,61 +1,47 @@
-# Local RAG Assistant
+Local RAG Assistant
+A production-style local Retrieval-Augmented Generation (RAG) pipeline designed to provide accurate, context-aware answers from your local documents. This system leverages FastAPI, Ollama (for local LLM inference), and a Reranker model to ensure high-quality retrieval and response generation.
 
-A lightweight local Retrieval-Augmented Generation (RAG) pipeline that lets you upload PDF documents, index their content, and ask questions through a Streamlit frontend.
+🚀 Key Features
+High-Precision Reranking: Uses a Cross-Encoder reranker to ensure only the most relevant document chunks are processed by the LLM.
 
-## Features
-- FastAPI backend for indexing and querying documents
-- Streamlit frontend for chat-based interaction
-- PDF upload support for indexing
-- Local vector storage for retrieval
+FastAPI Backend: A robust, asynchronous API architecture for document indexing and querying.
 
-## Requirements
-- Python 3.10+
-- Ollama running locally with the required models
-- `pip` or `uv` for dependency management
+Contextual Memory: Supports session-based conversation history, allowing for natural, multi-turn interactions.
 
-## Setup
+Local-First Privacy: Runs entirely on your machine using Ollama and local vector stores, ensuring your data never leaves your device.
 
-### 1. Create and activate a virtual environment
-```bash
-python -m venv .venv
-source .venv/bin/activate      # macOS / Linux
-.\.venv\Scripts\activate       # Windows
-```
+Multilingual Support: Capable of processing documents and answering queries across different languages.
 
-### 2. Install dependencies
-```bash
+🛠 Tech Stack
+Framework: FastAPI
+
+LLM Engine: Ollama (Local Inference)
+
+Orchestration: LangChain
+
+Vector Store: Qdrant
+
+Reranking: Cross-Encoder (Sentence-Transformers)
+
+📋 How It Works
+Indexing: Upload your PDF documents. The system extracts text, chunks it, and stores the vector embeddings in the local database.
+
+Retrieval: When you ask a question, the system searches the database for relevant content.
+
+Reranking: The retrieved chunks are evaluated and re-ordered by the Reranker model to guarantee semantic alignment with your query.
+
+Generation: The top-ranked context is passed to the LLM to generate a precise, context-aware answer.
+
+⚙️ Installation & Usage
+Clone the repository:
+
+Bash
+git clone https://github.com/12345zahraa/Local-RAG-Assistant.git
+Install requirements:
+
+Bash
 pip install -r requirements.txt
-```
+Run the API:
 
-> If you do not yet have a `requirements.txt` file, install the main packages manually:
->
-> ```bash
-> pip install fastapi uvicorn streamlit requests pypdf python-dotenv
-> ```
-
-### 3. Run the backend
-Start the FastAPI server from the project root:
-
-```bash
-uvicorn main:app --host 127.0.0.1 --port 8000 --reload
-```
-
-The API will be available at:
-- `http://127.0.0.1:8000/docs`
-
-### 4. Run the frontend
-In a separate terminal, start the Streamlit app:
-
-```bash
-streamlit run app_ui.py
-```
-
-The frontend will open in your browser.
-
-## API Endpoints
-- `POST /index-document` — Upload a PDF and index its content
-- `GET /ask?question=...` — Ask a question using the local RAG pipeline
-
-## Notes
-- Make sure the backend server is running before using the frontend.
-- If your local model is slow, allow extra time for responses.
+Bash
+python main.py
