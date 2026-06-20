@@ -1,47 +1,47 @@
-Local RAG Assistant
-A production-style local Retrieval-Augmented Generation (RAG) pipeline designed to provide accurate, context-aware answers from your local documents. This system leverages FastAPI, Ollama (for local LLM inference), and a Reranker model to ensure high-quality retrieval and response generation.
+# Local-RAG-Assistant
 
-🚀 Key Features
-High-Precision Reranking: Uses a Cross-Encoder reranker to ensure only the most relevant document chunks are processed by the LLM.
+**Local-RAG-Assistant** is a privacy-focused Retrieval-Augmented Generation (RAG) application designed to run entirely on your local machine. It combines **FastAPI**, **Ollama**, and **reranking** to provide accurate, context-aware answers from your documents without relying on external cloud services.
 
-FastAPI Backend: A robust, asynchronous API architecture for document indexing and querying.
+## Key Features
 
-Contextual Memory: Supports session-based conversation history, allowing for natural, multi-turn interactions.
+- **Reranking**: Improves retrieval quality by re-ordering the most relevant document chunks before generation.
+- **FastAPI Backend**: Provides a fast, scalable, and easy-to-use API for document processing and querying.
+- **Contextual Memory**: Supports multi-turn conversations by keeping track of conversation context.
+- **Local-First Privacy**: Keeps document processing and inference on your machine for better data privacy.
+- **Multilingual Support**: Handles queries and content across multiple languages.
 
-Local-First Privacy: Runs entirely on your machine using Ollama and local vector stores, ensuring your data never leaves your device.
+## Tech Stack
 
-Multilingual Support: Capable of processing documents and answering queries across different languages.
+- **Backend**: FastAPI
+- **LLM Runtime**: Ollama
+- **RAG Workflow**: LangChain
+- **Vector Database**: Qdrant
+- **Reranking**: Cross-Encoder / Sentence-Transformers
 
-🛠 Tech Stack
-Framework: FastAPI
+## How It Works
 
-LLM Engine: Ollama (Local Inference)
+1. **Document Ingestion**: PDFs or text files are uploaded and processed into chunks.
+2. **Embedding & Storage**: Chunks are converted into embeddings and stored in a local vector database.
+3. **Retrieval**: The system searches for the most relevant chunks based on the user query.
+4. **Reranking**: Retrieved chunks are reranked to improve relevance and accuracy.
+5. **Answer Generation**: The best context is sent to the LLM to generate a precise response.
 
-Orchestration: LangChain
+## Installation & Usage
 
-Vector Store: Qdrant
-
-Reranking: Cross-Encoder (Sentence-Transformers)
-
-📋 How It Works
-Indexing: Upload your PDF documents. The system extracts text, chunks it, and stores the vector embeddings in the local database.
-
-Retrieval: When you ask a question, the system searches the database for relevant content.
-
-Reranking: The retrieved chunks are evaluated and re-ordered by the Reranker model to guarantee semantic alignment with your query.
-
-Generation: The top-ranked context is passed to the LLM to generate a precise, context-aware answer.
-
-⚙️ Installation & Usage
 Clone the repository:
 
-Bash
+```bash
 git clone https://github.com/12345zahraa/Local-RAG-Assistant.git
-Install requirements:
+```
 
-Bash
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
-Run the API:
+```
 
-Bash
+Run the application:
+
+```bash
 python main.py
+```
